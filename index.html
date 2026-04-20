@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Rawsent — File Sharing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#F5F0E8;--cream2:#EDE8DF;--cream3:#E3DDD3;
+  --ink:#1A1714;--ink2:#4A4540;--ink3:#8A8480;--ink4:#BAB6B2;
+  --rose:#D4614A;--rose-light:#F5E8E4;--rose-mid:#E8A090;
+  --green:#3A7D5A;--green-light:#E4F0EA;
+  --amber:#C4862A;--amber-light:#F5EDD8;
+  --blue:#2A6CB4;--blue-light:#E4EEF8;
+  --border:#D8D3CA;
+  --shadow:rgba(26,23,20,0.06);--shadow2:rgba(26,23,20,0.12);
+  --r:14px;--r2:20px;--r3:28px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--ink);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:0 20px 48px}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0 26px}
+.logo{font-family:'Instrument Serif',serif;font-size:26px;letter-spacing:-0.5px;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo-dot{width:10px;height:10px;background:var(--rose);border-radius:50%;animation:breathe 2.5s ease infinite;flex-shrink:0}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.4);opacity:.7}}
+.status-pill{font-size:11px;font-weight:500;color:var(--green);background:var(--green-light);border:1px solid rgba(58,125,90,.22);border-radius:100px;padding:4px 12px;display:flex;align-items:center;gap:5px}
+.status-pill::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:breathe 2s infinite}
+
+/* HERO */
+.hero{padding:4px 0 30px}
+.eyebrow{font-size:12px;font-weight:500;color:var(--rose);letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px}
+.hero h1{font-family:'Instrument Serif',serif;font-size:clamp(34px,9vw,50px);line-height:1.1;letter-spacing:-1px;margin-bottom:12px}
+.hero h1 i{font-style:italic;color:var(--rose)}
+.hero p{font-size:14px;color:var(--ink3);font-weight:300;line-height:1.7}
+
+/* CARD */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r3);padding:24px;box-shadow:0 2px 16px var(--shadow),0 1px 3px var(--shadow2)}
+
+/* STEPS */
+.steps{display:flex;align-items:center;margin-bottom:22px}
+.step{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--ink4);transition:color .3s;white-space:nowrap}
+.step.active{color:var(--ink)}.step.done{color:var(--green)}
+.sn{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;transition:all .3s;flex-shrink:0}
+.step.done .sn{background:var(--green);border-color:var(--green);color:#fff}
+.step.active .sn{background:var(--ink);border-color:var(--ink);color:#fff}
+.sl{flex:1;height:1.5px;background:var(--border);margin:0 8px}
+
+/* DROP ZONE */
+#dz{border:2px dashed var(--border);border-radius:var(--r2);padding:36px 20px;text-align:center;cursor:pointer;transition:all .25s;background:var(--cream);position:relative}
+#dz:hover,#dz.over{border-color:var(--rose);background:var(--rose-light)}
+.dz-ico{width:54px;height:54px;background:#fff;border:1.5px solid var(--border);border-radius:15px;display:flex;align-items:center;justify-content:center;margin:0 auto 15px;box-shadow:0 4px 14px var(--shadow);transition:transform .2s}
+#dz:hover .dz-ico{transform:translateY(-3px)}
+.dz-ico svg{width:22px;height:22px;stroke:var(--rose);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dz-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.dz-sub{font-size:13px;color:var(--ink3);margin-bottom:18px}
+.dz-sub b{color:var(--rose);font-weight:500}
+.btn-ink{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:#fff;border:none;cursor:pointer;padding:11px 22px;border-radius:100px;font-family:'Geist',sans-serif;font-size:13px;font-weight:500;transition:all .2s}
+.btn-ink:hover{background:var(--rose);box-shadow:0 4px 18px rgba(212,97,74,.3);transform:translateY(-1px)}
+.btn-ink svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.dz-hint{font-size:11px;color:var(--ink4);margin-top:11px}
+#fi{display:none}
+
+/* FILE STRIP */
+.fstrip{display:flex;align-items:center;gap:12px;background:var(--cream);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px}
+.fext{width:44px;height:44px;min-width:44px;background:#fff;border:1px solid var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--rose);letter-spacing:.2px;text-align:center;padding:2px;box-shadow:0 2px 6px var(--shadow)}
+.finfo{flex:1;min-width:0}
+.fname{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fsize{font-size:11px;color:var(--ink3);margin-top:2px}
+.btn-x{background:none;border:none;cursor:pointer;color:var(--ink4);padding:6px;border-radius:8px;transition:all .2s;display:flex}
+.btn-x:hover{color:var(--rose);background:var(--rose-light)}
+.btn-x svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round}
+
+/* OPTIONS */
+.opts{margin-top:12px;background:var(--cream);border:1px solid var(--cream3);border-radius:var(--r2);padding:16px 18px}
+.opts-title{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.7px;text-transform:uppercase;margin-bottom:13px}
+.opt-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--cream2)}
+.opt-row:last-child{border-bottom:none;padding-bottom:0}
+.opt-row:first-of-type{padding-top:0}
+.opt-label{font-size:13px;color:var(--ink2)}
+.opt-label small{display:block;font-size:11px;color:var(--ink3);margin-top:1px}
+.seg{display:flex;background:var(--cream2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
+.sb{background:none;border:none;cursor:pointer;font-family:'Geist',sans-serif;font-size:12px;font-weight:500;color:var(--ink3);padding:5px 9px;border-radius:7px;transition:all .2s;white-space:nowrap}
+.sb.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px var(--shadow2)}
+
+/* BIG BUTTON */
+.btn-big{width:100%;padding:15px;background:var(--ink);color:#fff;border:none;border-radius:100px;font-family:'Geist',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:13px}
+.btn-big:hover{background:var(--rose);box-shadow:0 8px 26px rgba(212,97,74,.28);transform:translateY(-1px)}
+.btn-big:active{transform:none}
+.btn-big svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* PROGRESS */
+#pWrap{display:none}
+.ptop{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.plbl{font-size:13px;font-weight:500;color:var(--ink2)}
+.ppct{font-size:13px;font-weight:600;color:var(--rose);font-variant-numeric:tabular-nums}
+.ptrack{background:var(--cream3);border-radius:100px;height:8px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--rose),var(--amber));border-radius:100px;width:0%;transition:width .3s ease}
+.psteps{margin-top:13px;display:flex;flex-direction:column;gap:7px}
+.pstep{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink4);transition:color .3s}
+.pstep.on{color:var(--ink)}.pstep.ok{color:var(--green)}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .3s}
+.pstep.on .pdot{background:var(--rose);animation:breathe 1s infinite}
+.pstep.ok .pdot{background:var(--green)}
+.btn-cancel{margin-top:12px;padding:8px 18px;background:none;border:1.5px solid var(--border);border-radius:100px;font-family:'Geist',sans-serif;font-size:12px;color:var(--ink3);cursor:pointer;transition:all .2s}
+.btn-cancel:hover{border-color:var(--rose);color:var(--rose)}
+
+/* ERROR */
+.ebox{background:var(--rose-light);border:1.5px solid var(--rose-mid);border-radius:var(--r);padding:16px;display:flex;gap:11px;align-items:flex-start}
+.eico{width:18px;height:18px;min-width:18px;margin-top:1px}
+.eico svg{width:18px;height:18px;stroke:var(--rose);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.etitle{font-size:13px;font-weight:600;color:var(--rose);margin-bottom:4px}
+.emsg{font-size:12px;color:var(--ink2);line-height:1.6}
+.ebtn-row{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+.btn-rose{padding:8px 16px;background:var(--rose);color:#fff;border:none;border-radius:100px;font-family:'Geist',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background .2s}
+.btn-rose:hover{background:#b84d39}
+.btn-dark{padding:8px 16px;background:var(--ink);color:#fff;border:none;border-radius:100px;font-family:'Geist',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background .2s}
+.btn-dark:hover{background:var(--ink2)}
+
+/* INFO STRIP */
+.istrip{border-radius:var(--r);padding:12px 14px;display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.6}
+.istrip svg{width:15px;height:15px;min-width:15px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-top:1px}
+.istrip.warn{background:var(--amber-light);border:1px solid #e8c87a;color:var(--ink2)}
+.istrip.warn svg{stroke:var(--amber)}
+.istrip.info{background:var(--blue-light);border:1px solid rgba(42,108,180,.2);color:var(--ink2)}
+.istrip.info svg{stroke:var(--blue)}
+
+/* RESULT */
+.rtop{text-align:center;padding:6px 0 20px}
+.check{width:58px;height:58px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 13px;animation:pop .5s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.check svg{width:26px;height:26px;stroke:var(--green);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.rh{font-family:'Instrument Serif',serif;font-size:26px;letter-spacing:-.5px;margin-bottom:5px}
+.rsub{font-size:13px;color:var(--ink3);font-weight:300}
+.lbox{background:var(--cream);border:1.5px solid var(--border);border-radius:16px;padding:5px 5px 5px 14px;display:flex;align-items:center;gap:7px;margin:16px 0 11px}
+.lurl{flex:1;font-size:12px;color:var(--rose);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.btn-copy{padding:9px 15px;border-radius:11px;background:var(--ink);color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:'Geist',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.btn-copy:hover{background:var(--rose)}
+.btn-copy.ok{background:var(--green)}
+.btn-copy svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.btn-open{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:12px;background:var(--green-light);border:1.5px solid rgba(58,125,90,.28);border-radius:100px;color:var(--green);font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:11px;text-decoration:none}
+.btn-open:hover{background:var(--green);color:#fff}
+.btn-open svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.srow{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.sbtn{flex:1;min-width:calc(50% - 4px);padding:10px 8px;background:var(--cream);border:1px solid var(--border);border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-family:'Geist',sans-serif;font-size:12px;font-weight:500;color:var(--ink2);transition:all .2s}
+.sbtn:hover{border-color:var(--ink2);background:#fff;transform:translateY(-1px)}
+.sbtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mrow{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ink3);background:var(--cream2);border:1px solid var(--border);border-radius:100px;padding:4px 10px}
+.btn-again{width:100%;padding:12px;background:none;border:1.5px solid var(--border);border-radius:100px;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--ink2);cursor:pointer;transition:all .2s}
+.btn-again:hover{border-color:var(--ink);color:var(--ink)}
+
+/* FEATURES */
+.feats{margin-top:26px;display:flex;flex-direction:column;gap:10px}
+.feat{display:flex;align-items:flex-start;gap:13px;padding:15px;background:#fff;border:1px solid var(--border);border-radius:var(--r2);transition:transform .2s,box-shadow .2s}
+.feat:hover{transform:translateY(-2px);box-shadow:0 4px 14px var(--shadow)}
+.fico{width:36px;height:36px;min-width:36px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.fico svg{width:17px;height:17px;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.fico.r{background:var(--rose-light)}.fico.r svg{stroke:var(--rose)}
+.fico.g{background:var(--green-light)}.fico.g svg{stroke:var(--green)}
+.fico.a{background:var(--amber-light)}.fico.a svg{stroke:var(--amber)}
+.feat h3{font-size:14px;font-weight:600;margin-bottom:2px}
+.feat p{font-size:12px;color:var(--ink3);line-height:1.6}
+footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--ink4)}
+footer a{color:var(--ink3);text-decoration:none;margin:0 5px}
+footer a:hover{color:var(--rose)}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--ink);color:#fff;border-radius:100px;padding:10px 20px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:999;box-shadow:0 4px 18px rgba(0,0,0,.2)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.up{animation:up .3s ease}
+
+@media(min-width:520px){.app{padding:0 32px 52px}nav{padding:26px 0 30px}.feats{display:grid;grid-template-columns:1fr 1fr;gap:11px}}
+@media(min-width:780px){.app{max-width:560px;padding:0 40px 60px}.feats{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<nav>
+  <a class="logo" href="#"><div class="logo-dot"></div>rawsent</a>
+  <div class="status-pill">Live</div>
+</nav>
+
+<div class="hero">
+  <div class="eyebrow">Free · No signup</div>
+  <h1>Send anything,<br><i>instantly.</i></h1>
+  <p>Drop a file, get a real working link, share it anywhere.</p>
+</div>
+
+<div class="card" id="card">
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="s1"><div class="sn">1</div>Upload</div>
+    <div class="sl"></div>
+    <div class="step" id="s2"><div class="sn">2</div>Options</div>
+    <div class="sl"></div>
+    <div class="step" id="s3"><div class="sn">3</div>Share</div>
+  </div>
+
+  <!-- ── STEP 1: Drop zone ── -->
+  <div id="dz" onclick="fi.click()">
+    <div class="dz-ico">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div class="dz-title">Drop your file here</div>
+    <div class="dz-sub">or <b>browse files</b> from your device</div>
+    <button class="btn-ink" onclick="event.stopPropagation();fi.click()">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Choose a file
+    </button>
+    <div class="dz-hint">All file types · Up to 2 GB · Powered by file.io</div>
+    <input type="file" id="fi" onchange="pickFile(this.files[0])">
+  </div>
+
+  <!-- ── STEP 2: File + options ── -->
+  <div id="step2" style="display:none" class="up">
+    <div class="fstrip">
+      <div class="fext" id="fext">FILE</div>
+      <div class="finfo">
+        <div class="fname" id="fname">–</div>
+        <div class="fsize" id="fsize">–</div>
+      </div>
+      <button class="btn-x" onclick="reset()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="opts">
+      <div class="opts-title">Options</div>
+      <div class="opt-row">
+        <div class="opt-label">Expires after<small>Auto-delete link</small></div>
+        <div class="seg" id="expSeg">
+          <button class="sb" data-v="1" onclick="seg('expSeg',this)">1h</button>
+          <button class="sb on" data-v="24" onclick="seg('expSeg',this)">24h</button>
+          <button class="sb" data-v="72" onclick="seg('expSeg',this)">3d</button>
+          <button class="sb" data-v="168" onclick="seg('expSeg',this)">7d</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="opt-label">Downloads<small>Max per link</small></div>
+        <div class="seg" id="dlSeg">
+          <button class="sb" data-v="1" onclick="seg('dlSeg',this)">×1</button>
+          <button class="sb" data-v="5" onclick="seg('dlSeg',this)">×5</button>
+          <button class="sb on" data-v="0" onclick="seg('dlSeg',this)">∞</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="istrip warn" style="margin-top:11px">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div><strong>Anyone with the link can download.</strong> Don't share sensitive or private files.</div>
+    </div>
+
+    <button class="btn-big" onclick="upload()">
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Upload & Get Link
+    </button>
+  </div>
+
+  <!-- ── PROGRESS ── -->
+  <div id="pWrap">
+    <div class="ptop">
+      <span class="plbl" id="plbl">Starting…</span>
+      <span class="ppct" id="ppct">0%</span>
+    </div>
+    <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+    <div class="psteps">
+      <div class="pstep" id="ps1"><div class="pdot"></div>Connecting to file.io</div>
+      <div class="pstep" id="ps2"><div class="pdot"></div>Uploading your file</div>
+      <div class="pstep" id="ps3"><div class="pdot"></div>Generating download link</div>
+    </div>
+    <button class="btn-cancel" onclick="cancel()">Cancel</button>
+  </div>
+
+  <!-- ── ERROR ── -->
+  <div id="errWrap" style="display:none" class="up">
+    <div class="ebox">
+      <div class="eico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <div>
+        <div class="etitle">Upload failed</div>
+        <div class="emsg" id="emsg">Something went wrong.</div>
+        <div class="ebtn-row">
+          <button class="btn-rose" onclick="retry()">Try again</button>
+          <button class="btn-dark" onclick="reset()">New file</button>
+        </div>
+      </div>
+    </div>
+    <div class="istrip info" style="margin-top:10px">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div id="tipMsg">If uploads keep failing, try opening this page in a private/incognito window or switching to mobile data.</div>
+    </div>
+  </div>
+
+  <!-- ── RESULT ── -->
+  <div id="result" style="display:none" class="up">
+    <div class="rtop">
+      <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="rh">Link ready!</div>
+      <div class="rsub" id="rsub">Your file is live</div>
+    </div>
+
+    <div class="lbox">
+      <div class="lurl" id="lurl">–</div>
+      <button class="btn-copy" id="cpyBtn" onclick="copyLink()">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+
+    <a id="openBtn" class="btn-open" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Test Link
+    </a>
+
+    <div class="srow">
+      <button class="sbtn" onclick="shareNative()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
+      <button class="sbtn" onclick="shareWA()"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</button>
+      <button class="sbtn" onclick="shareTG()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Telegram</button>
+      <button class="sbtn" onclick="shareEmail()"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email</button>
+    </div>
+
+    <div class="mrow" id="mrow"></div>
+    <button class="btn-again" onclick="reset()">↑ Send another file</button>
+  </div>
+
+</div><!-- /card -->
+
+<div class="feats">
+  <div class="feat">
+    <div class="fico r"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.99 1.18 2 2 0 013 .99h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L7.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 15.92z"/></svg></div>
+    <div><h3>Real links</h3><p>Files actually uploaded. Links work instantly for anyone.</p></div>
+  </div>
+  <div class="feat">
+    <div class="fico a"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    <div><h3>Auto-expire</h3><p>Links self-delete after 1h, 24h, 3 days or 7 days.</p></div>
+  </div>
+  <div class="feat">
+    <div class="fico g"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div>
+    <div><h3>Any file type</h3><p>Images, videos, ZIPs, PDFs — any format up to 2 GB.</p></div>
+  </div>
+</div>
+
+<footer><p>© 2025 rawsent · Powered by <a href="https://file.io" target="_blank">file.io</a> · <a href="#">Privacy</a></p></footer>
+</div>
+
+<div id="toast">
+  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="tmsg">Done!</span>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+let F = null, XHR = null, LINK = '';
+const sv = { expSeg:'24', dlSeg:'0' };
+
+// ─── Drag & Drop ──────────────────────────────────────────────────────────────
+const dz = document.getElementById('dz');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+['dragleave','dragend'].forEach(ev => dz.addEventListener(ev, () => dz.classList.remove('over')));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); if (e.dataTransfer.files[0]) pickFile(e.dataTransfer.files[0]); });
+
+// ─── Pick file ────────────────────────────────────────────────────────────────
+function pickFile(f) {
+  F = f;
+  const ext = f.name.includes('.') ? f.name.split('.').pop().toUpperCase().slice(0,5) : 'FILE';
+  document.getElementById('fext').textContent = ext;
+  document.getElementById('fname').textContent = f.name;
+  document.getElementById('fsize').textContent = fmt(f.size);
+  show({ dz:false, step2:true, pWrap:false, errWrap:false, result:false });
+  setStep(2);
+}
+
+// ─── Segmented control ────────────────────────────────────────────────────────
+function seg(id, btn) {
+  sv[id] = btn.dataset.v;
+  document.querySelectorAll('#'+id+' .sb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ─── Upload via file.io ───────────────────────────────────────────────────────
+function upload() {
+  if (!F) return;
+  show({ step2:false, pWrap:true, errWrap:false, result:false });
+  resetProg();
+  setStep(2);
+
+  const ps = [1,2,3].map(i => document.getElementById('ps'+i));
+  activate(ps, 0);
+  setP(0); setLbl('Connecting to file.io…');
+
+  // file.io accepts standard FormData POST and returns JSON with a link
+  const fd = new FormData();
+  fd.append('file', F);
+
+  // Expiry: file.io uses ?expires=Xd or Xh param in the URL
+  const hours = parseInt(sv.expSeg) || 24;
+  const expiryStr = hours >= 24 ? Math.floor(hours/24) + 'd' : hours + 'h';
+  const url = 'https://file.io/?expires=' + expiryStr;
+
+  // Max downloads
+  const maxDl = sv.dlSeg !== '0' ? parseInt(sv.dlSeg) : null;
+
+  XHR = new XMLHttpRequest();
+  XHR.open('POST', url, true);
+
+  XHR.upload.onprogress = e => {
+    if (!ps[1].classList.contains('on') && !ps[1].classList.contains('ok')) {
+      done(ps, 0); activate(ps, 1);
+      setLbl('Uploading ' + F.name + '…');
+    }
+    if (e.lengthComputable) setP(Math.round(e.loaded / e.total * 80) + 8);
+  };
+
+  XHR.upload.onload = () => {
+    done(ps, 1); activate(ps, 2);
+    setLbl('Generating link…');
+    setP(92);
+  };
+
+  XHR.onload = () => {
+    if (XHR.status === 200) {
+      let data;
+      try { data = JSON.parse(XHR.responseText); } catch(e) { showErr('Could not parse server response.', false); return; }
+      if (data.success && data.link) {
+        done(ps, 2); setP(100);
+        setTimeout(() => showResult(data.link, data.expires || null), 350);
+      } else {
+        showErr('Server returned an error: ' + (data.message || 'unknown'), false);
+      }
+    } else if (XHR.status === 413) {
+      showErr('File too large. file.io allows up to 2 GB.', false);
+    } else {
+      showErr('Upload failed (HTTP ' + XHR.status + '). Please try again.', true);
+    }
+  };
+
+  XHR.onerror = () => {
+    // Try fallback to tmpfiles.org
+    showErr(
+      'Could not reach file.io (network/CORS block).\n\nThis usually means an ad-blocker or browser extension is blocking the request. Try:\n① Incognito/private window\n② Disable extensions\n③ Use mobile data instead of WiFi',
+      true
+    );
+  };
+
+  XHR.ontimeout = () => showErr('Upload timed out. Check your connection and try again.', false);
+  XHR.timeout = 300000;
+  XHR.send(fd);
+}
+
+function showErr(msg, isCors) {
+  show({ pWrap:false, errWrap:true });
+  document.getElementById('emsg').textContent = msg;
+  document.getElementById('tipMsg').textContent = isCors
+    ? '💡 Most failures are caused by browser extensions. Open an incognito window (no extensions) and try again.'
+    : '💡 If this keeps happening, try a different browser or network.';
+}
+
+function showResult(url, expires) {
+  LINK = url;
+  show({ pWrap:false, result:true });
+  document.getElementById('lurl').textContent = url;
+  document.getElementById('openBtn').href = url;
+
+  const expMap = {'1':'1 hour','24':'24 hours','72':'3 days','168':'7 days'};
+  const dlMap = {'0':'Unlimited','1':'×1 only','5':'×5 max'};
+  document.getElementById('rsub').textContent = '"' + F.name + '" · Expires: ' + (expMap[sv.expSeg]||'24h');
+  document.getElementById('mrow').innerHTML =
+    '<div class="chip">⏱ ' + (expMap[sv.expSeg]||'24h') + '</div>' +
+    '<div class="chip">⬇ ' + (dlMap[sv.dlSeg]||'∞') + '</div>' +
+    '<div class="chip">📦 ' + fmt(F.size) + '</div>';
+  setStep(3);
+}
+
+function copyLink() {
+  if (!LINK) return;
+  const btn = document.getElementById('cpyBtn');
+  navigator.clipboard.writeText(LINK).then(() => {
+    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.classList.add('ok');
+    toast('Copied to clipboard!');
+    setTimeout(() => {
+      btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+      btn.classList.remove('ok');
+    }, 2200);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = LINK; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Copied!');
+  });
+}
+
+function cancel() {
+  if (XHR) { XHR.abort(); XHR = null; }
+  show({ step2:true, pWrap:false });
+  setStep(2);
+}
+
+function retry() {
+  show({ errWrap:false });
+  upload();
+}
+
+function reset() {
+  if (XHR) { XHR.abort(); XHR = null; }
+  F = null; LINK = '';
+  document.getElementById('fi').value = '';
+  show({ dz:true, step2:false, pWrap:false, errWrap:false, result:false });
+  resetProg();
+  sv.expSeg='24'; sv.dlSeg='0';
+  document.querySelectorAll('#expSeg .sb').forEach((b,i) => b.classList.toggle('on', i===1));
+  document.querySelectorAll('#dlSeg .sb').forEach((b,i) => b.classList.toggle('on', i===2));
+  setStep(1);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── Share ────────────────────────────────────────────────────────────────────
+function shareNative() { navigator.share ? navigator.share({title:F?F.name:'File', url:LINK}).catch(()=>{}) : copyLink(); }
+function shareWA() { window.open('https://wa.me/?text='+encodeURIComponent('Here is your file: '+LINK),'_blank'); }
+function shareTG() { window.open('https://t.me/share/url?url='+encodeURIComponent(LINK)+'&text='+encodeURIComponent('Shared via Rawsent'),'_blank'); }
+function shareEmail() { window.location.href = 'mailto:?subject=Shared file&body='+encodeURIComponent('Here is your file: '+LINK); }
+
+// ─── Progress helpers ─────────────────────────────────────────────────────────
+function activate(ps, i) { ps[i].classList.add('on'); }
+function done(ps, i) { ps[i].classList.remove('on'); ps[i].classList.add('ok'); }
+function setP(p) { document.getElementById('pfill').style.width=p+'%'; document.getElementById('ppct').textContent=Math.round(p)+'%'; }
+function setLbl(t) { document.getElementById('plbl').textContent=t; }
+function resetProg() {
+  [1,2,3].forEach(i => { const e=document.getElementById('ps'+i); e.classList.remove('on','ok'); });
+  setP(0); setLbl('Starting…');
+}
+
+// ─── Step indicator ───────────────────────────────────────────────────────────
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    const el=document.getElementById('s'+i);
+    el.classList.remove('active','done');
+    if (i<n) el.classList.add('done');
+    else if (i===n) el.classList.add('active');
+  });
+}
+
+// ─── Show/hide ────────────────────────────────────────────────────────────────
+function show(map) {
+  Object.entries(map).forEach(([id,v]) => {
+    const el=document.getElementById(id);
+    if(el) el.style.display=v?'block':'none';
+  });
+}
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+function fmt(b) {
+  if(b<1024) return b+' B';
+  if(b<1048576) return (b/1024).toFixed(1)+' KB';
+  if(b<1073741824) return (b/1048576).toFixed(1)+' MB';
+  return (b/1073741824).toFixed(2)+' GB';
+}
+function toast(msg) {
+  const t=document.getElementById('toast');
+  document.getElementById('tmsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+</script>
+</body>
+</html>
